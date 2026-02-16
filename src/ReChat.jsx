@@ -10,7 +10,7 @@ function ResponseOption({ label, emoji, color, text, onSend }) {
     green: {
       bg: 'bg-green-400/20',
       border: 'border-green-300/50',
-      text: 'text-green-700',
+      text: 'text-green-700',a
       hover: 'hover:bg-green-400/30'
     },
     blue: {
@@ -39,7 +39,7 @@ function ResponseOption({ label, emoji, color, text, onSend }) {
         <textarea
           value={editedText}
           onChange={(e) => setEditedText(e.target.value)}
-          className="w-full text-sm text-gray-800 bg-white/50 border border-gray-300 rounded-lg p-2 mb-2 min-h-[60px] focus:ring-2 focus:ring-teal-500"
+          className="w-full text-sm text-gray-800 bg-white/50 border border-gray-300 rounded-lg p-2 mb-2 min-h-[60px] focus:ring-2 focus:ring-[#5BBF3F] focus:ring-offset-0"
           autoFocus
         />
       ) : (
@@ -105,6 +105,7 @@ export default function ReChat() {
   const [redFlagAnalysis, setRedFlagAnalysis] = useState(null);
   const [selfBarometer, setSelfBarometer] = useState({ level: 'green', score: 100, patterns: [] });
   const [showBarometerDetail, setShowBarometerDetail] = useState(false);
+  const [createRoomId, setCreateRoomId] = useState('');
   
   const messagesEndRef = useRef(null);
   const roomIdInputRef = useRef(null);
@@ -459,7 +460,7 @@ Respond ONLY with valid JSON. No markdown, no backticks, just pure JSON.`;
       });
     } catch (error) {
       console.error('Response error:', error);
-      alert('Failed to generate responses');
+      alert(`Failed to generate responses: ${error.message}`);
     } finally {
       setIsLoadingAI(false);
     }
@@ -516,7 +517,7 @@ ONLY valid JSON.`;
       });
     } catch (error) {
       console.error('Analysis error:', error);
-      alert('Failed to analyze');
+      alert(`Failed to analyze: ${error.message}`);
     } finally {
       setIsLoadingAI(false);
     }
@@ -569,7 +570,7 @@ ONLY valid JSON.`;
       setAiSuggestions(suggestions);
     } catch (error) {
       console.error('AI error:', error);
-      alert('Failed to get AI help');
+      alert(`AI help failed: ${error.message}`);
     } finally {
       setIsLoadingAI(false);
     }
@@ -659,15 +660,16 @@ ONLY valid JSON.`;
 
   if (screen === 'welcome') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-teal-100 to-emerald-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(to bottom right, #e8f5e9, #e3f2fd, #e8f5e9)' }}>
+        <div className="max-w-md w-full bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/40">
           <div className="text-center mb-8">
-            {/* TODO: Add your ReChat logo here when deployed */}
-            <div className="inline-block p-3 bg-teal-500/20 backdrop-blur-sm rounded-2xl mb-4">
-              <MessageSquare className="w-8 h-8 text-teal-700" />
+            <div 
+              className="inline-block rounded-2xl p-6 mb-3 border-2 border-gray-200 shadow-lg"
+              style={{ background: '#ffffff' }}
+            >
+              <img src="/logo.png" alt="ReChat" className="h-20 w-auto object-contain" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">ReChat</h1>
-            <p className="text-gray-600">
+            <p className="text-sm font-medium" style={{ color: 'var(--rechat-charcoal)' }}>
               AI helps you communicate with compassion
             </p>
           </div>
@@ -675,49 +677,72 @@ ONLY valid JSON.`;
           <div className="space-y-4">
             {!roomId ? (
               <>
-                <button
-                  onClick={() => {
-                    const newRoomId = 'room_' + Math.random().toString(36).substr(2, 9);
-                    setRoomId(newRoomId);
-                  }}
-                  className="w-full bg-teal-500/90 backdrop-blur-sm text-white py-3 rounded-xl font-semibold hover:bg-teal-600 transition flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <Users className="w-5 h-5" />
-                  Create New Room
-                </button>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--rechat-charcoal)' }}>
+                    Create a room (choose an ID others will use to join)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. book-club, family-chat"
+                    value={createRoomId}
+                    onChange={(e) => setCreateRoomId(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (createRoomId.trim() ? setRoomId(createRoomId.trim().toLowerCase().replace(/\s+/g, '-')) : setRoomId('room_' + Math.random().toString(36).substr(2, 9)))}
+                    autoComplete="off"
+                    className="w-full px-4 py-3 bg-white/70 border rounded-xl focus:ring-2 focus:ring-offset-1"
+                    style={{ borderColor: 'var(--rechat-blue)', outline: 'none' }}
+                  />
+                  <button
+                    onClick={() => {
+                      const id = createRoomId.trim().toLowerCase().replace(/\s+/g, '-');
+                      setRoomId(id || 'room_' + Math.random().toString(36).substr(2, 9));
+                    }}
+                    className="w-full mt-2 py-3 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2 shadow-lg hover:opacity-95"
+                    style={{ background: 'linear-gradient(135deg, var(--rechat-green-light), var(--rechat-green))' }}
+                  >
+                    <Users className="w-5 h-5" />
+                    Create Room
+                  </button>
+                </div>
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-gray-300"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white/80 text-gray-500">or</span>
+                    <span className="px-2 bg-white/90 text-gray-500">or</span>
                   </div>
                 </div>
 
-                <input
-                  ref={roomIdInputRef}
-                  type="text"
-                  placeholder="Enter Room ID to join"
-                  autoComplete="off"
-                  className="w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-teal-500"
-                />
-                <button
-                  onClick={() => {
-                    const id = roomIdInputRef.current?.value;
-                    if (id && id.trim()) setRoomId(id.trim());
-                  }}
-                  className="w-full bg-white/50 backdrop-blur-sm text-gray-700 py-3 rounded-xl font-semibold hover:bg-white/70 transition"
-                >
-                  Join Room
-                </button>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--rechat-charcoal)' }}>
+                    Join a room (enter the ID someone shared)
+                  </label>
+                  <input
+                    ref={roomIdInputRef}
+                    type="text"
+                    placeholder="e.g. book-club"
+                    autoComplete="off"
+                    className="w-full px-4 py-3 bg-white/70 border rounded-xl focus:ring-2 focus:ring-offset-1"
+                    style={{ borderColor: 'var(--rechat-blue)', outline: 'none' }}
+                  />
+                  <button
+                    onClick={() => {
+                      const id = roomIdInputRef.current?.value?.trim();
+                      if (id) setRoomId(id.toLowerCase().replace(/\s+/g, '-'));
+                    }}
+                    className="w-full mt-2 py-3 rounded-xl font-semibold transition border-2"
+                    style={{ color: 'var(--rechat-blue)', borderColor: 'var(--rechat-blue)', background: 'transparent' }}
+                  >
+                    Join Room
+                  </button>
+                </div>
               </>
             ) : (
               <>
-                <div className="bg-teal-500/10 backdrop-blur-sm border border-teal-200/50 rounded-xl p-4 mb-4">
-                  <div className="text-sm text-gray-600 mb-1">Room ID:</div>
-                  <div className="font-mono text-teal-700 font-semibold">{roomId}</div>
-                  <div className="text-xs text-gray-500 mt-2">Share this with the other person</div>
+                <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(91, 191, 63, 0.12)', border: '1px solid rgba(91, 191, 63, 0.4)' }}>
+                  <div className="text-sm font-medium mb-1" style={{ color: 'var(--rechat-charcoal)' }}>Room ID</div>
+                  <div className="font-mono font-semibold" style={{ color: 'var(--rechat-green)' }}>{roomId}</div>
+                  <div className="text-xs text-gray-500 mt-2">Share this with others so they can join</div>
                 </div>
 
                 <input
@@ -727,19 +752,22 @@ ONLY valid JSON.`;
                   onChange={(e) => setTempName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && enterRoom()}
                   autoComplete="off"
-                  className="w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-4 py-3 bg-white/70 border rounded-xl focus:ring-2 focus:ring-offset-1"
+                  style={{ borderColor: 'var(--rechat-blue)', outline: 'none' }}
                 />
 
                 <button
                   onClick={enterRoom}
-                  className="w-full bg-teal-500/90 backdrop-blur-sm text-white py-3 rounded-xl font-semibold hover:bg-teal-600 transition shadow-lg"
+                  className="w-full py-3 rounded-xl font-semibold text-white transition shadow-lg hover:opacity-95"
+                  style={{ background: 'linear-gradient(135deg, var(--rechat-green-light), var(--rechat-green))' }}
                 >
                   Enter Chat Room
                 </button>
 
                 <button
                   onClick={() => setRoomId('')}
-                  className="w-full text-sm text-gray-600 hover:text-gray-800"
+                  className="w-full text-sm font-medium hover:underline"
+                  style={{ color: 'var(--rechat-charcoal)' }}
                 >
                   Back
                 </button>
@@ -752,17 +780,25 @@ ONLY valid JSON.`;
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50">
-      <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 p-4 shadow-sm">
+    <div className="h-screen flex flex-col" style={{ background: 'linear-gradient(to bottom right, #e8f5e9, #e3f2fd, #e8f5e9)' }}>
+      <div className="bg-white/80 backdrop-blur-xl border-b border-white/30 p-4 shadow-sm">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-2">
-            <div>
-              <h1 className="text-xl font-bold text-gray-800">{roomName}</h1>
-              <p className="text-sm text-gray-600">
-                <span className="font-mono text-xs">{roomId}</span>
-                <span className="mx-2">•</span>
-                {userName}
-              </p>
+            <div className="flex items-center gap-3">
+              <div 
+                className="rounded-xl p-2 shrink-0 border border-gray-200 shadow-sm"
+                style={{ background: '#ffffff' }}
+              >
+                <img src="/logo.png" alt="ReChat" className="h-8 w-auto object-contain" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold" style={{ color: 'var(--rechat-charcoal)' }}>{roomName}</h1>
+                <p className="text-sm" style={{ color: 'var(--rechat-charcoal)', opacity: 0.8 }}>
+                  <span className="font-mono text-xs">{roomId}</span>
+                  <span className="mx-2">•</span>
+                  {userName}
+                </p>
+              </div>
             </div>
           </div>
           
@@ -833,7 +869,8 @@ ONLY valid JSON.`;
       {/* Floating Shortcuts */}
       <button
         onClick={() => setShowShortcuts(!showShortcuts)}
-        className="fixed right-6 bottom-24 z-50 w-14 h-14 bg-teal-500/90 backdrop-blur-md text-white rounded-full shadow-2xl hover:bg-teal-600 transition flex items-center justify-center border-2 border-white/30"
+        className="fixed right-6 bottom-24 z-50 w-14 h-14 backdrop-blur-md text-white rounded-full shadow-2xl transition flex items-center justify-center border-2 border-white/30 hover:opacity-95"
+            style={{ background: 'linear-gradient(135deg, var(--rechat-green-light), var(--rechat-green))' }}
       >
         <span className="text-2xl">⚡</span>
       </button>
@@ -902,9 +939,10 @@ ONLY valid JSON.`;
               <div
                 className={`max-w-lg rounded-2xl px-4 py-3 backdrop-blur-md relative ${
                   msg.userName === userName
-                    ? 'bg-teal-500/90 text-white shadow-lg'
+                    ? 'text-white shadow-lg'
                     : 'bg-white/80 border border-white/30 shadow-md'
                 }`}
+                style={msg.userName === userName ? { background: 'linear-gradient(135deg, var(--rechat-green-light), var(--rechat-green))' } : {}}
               >
                 <div className="text-xs opacity-75 mb-1">{msg.userName}</div>
                 <div className="text-sm">{msg.text}</div>
@@ -1003,7 +1041,8 @@ ONLY valid JSON.`;
                   setAngerCalmDown(null);
                   setEmotionLevel('angry');
                 }}
-                className="px-6 py-2 bg-teal-500/90 text-white rounded-xl hover:bg-teal-600 transition font-medium"
+                className="px-6 py-2 text-white rounded-xl transition font-medium hover:opacity-95"
+                style={{ background: 'linear-gradient(135deg, var(--rechat-green-light), var(--rechat-green))' }}
               >
                 I'm ready to respond now
               </button>
@@ -1145,7 +1184,7 @@ ONLY valid JSON.`;
               </div>
 
               <div className="bg-teal-100/60 backdrop-blur-md rounded-xl p-4 border border-teal-300/50 shadow-lg">
-                <div className="text-xs font-semibold text-teal-700 mb-2">💡 HOW TO RESPOND</div>
+                <div className="text-xs font-semibold mb-2" style={{ color: 'var(--rechat-green)' }}>💡 HOW TO RESPOND</div>
                 <div className="text-sm text-gray-800">{messageAnalysis.responseApproach}</div>
               </div>
             </div>
@@ -1198,7 +1237,7 @@ ONLY valid JSON.`;
             )}
 
             <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-5 h-5 text-teal-700" />
+              <Sparkles className="w-5 h-5" style={{ color: 'var(--rechat-green)' }} />
               <h3 className="font-semibold text-gray-800">AI Suggestions (Your Choice)</h3>
             </div>
 
@@ -1328,12 +1367,13 @@ ONLY valid JSON.`;
                 }}
                 placeholder="Type your message..."
                 autoComplete="off"
-                className="flex-1 px-4 py-3 bg-white/50 border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-teal-500"
+                className="flex-1 px-4 py-3 bg-white/50 border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-[#5BBF3F] focus:ring-offset-0"
               />
               <button
                 onClick={getAIHelp}
                 disabled={isLoadingAI || !currentMessage.trim()}
-                className="px-6 py-3 bg-teal-500/90 text-white rounded-xl font-semibold hover:bg-teal-600 transition disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-3 text-white rounded-xl font-semibold transition disabled:opacity-50 flex items-center gap-2 hover:opacity-95"
+                style={{ background: 'linear-gradient(135deg, var(--rechat-green-light), var(--rechat-green))' }}
               >
                 {isLoadingAI ? (
                   <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
